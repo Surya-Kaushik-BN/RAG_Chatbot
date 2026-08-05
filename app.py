@@ -122,12 +122,12 @@ def main() -> None:
         return
 
     # Guard rail: make sure there is something to search before showing the chat
-    if not get_pdf_files():
-        st.warning(
-            "No PDFs found in the documents/ folder. Add your interview prep "
-            "PDFs there and run `python ingest.py` before chatting."
-        )
-        return
+    # if not get_pdf_files():
+    #     st.warning(
+    #         "No PDFs found in the documents/ folder. Add your interview prep "
+    #         "PDFs there and run `python ingest.py` before chatting."
+    #     )
+    #     return
 
     try:
         vectorstore = load_vectorstore()
