@@ -81,9 +81,10 @@ def extract_sources(chunks: list[Document]) -> list[Source]:
         filename = Path(chunk.metadata.get("source", "unknown")).name
         page = chunk.metadata.get("page", 0) + 1
         key = (filename, page)
+        filename_display = filename.split("/")[-1]  # Show only the file name, not the full path
         if key not in seen:
             seen.add(key)
-            sources.append(Source(filename=filename, page=page))
+            sources.append(Source(filename=filename_display, page=page))
     return sources
 
 
