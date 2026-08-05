@@ -1,0 +1,30 @@
+# Python cache and build artifacts
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments
+.venv/
+venv/
+ENV/
+env/
+
+# Streamlit secrets and local config
+.streamlit/secrets.toml
+.env
+
+# Local ChromaDB storage
+#chroma_db/
+documents/
+
+# Editor/project files
+.vscode/
+*.sublime-project
+*.sublime-workspace
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs and runtime files
+*.log
