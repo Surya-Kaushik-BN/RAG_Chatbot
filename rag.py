@@ -67,7 +67,7 @@ def format_context(chunks: list[Document]) -> str:
     """Combine retrieved chunks into a single text block for the LLM prompt."""
     parts = []
     for i, chunk in enumerate(chunks, start=1):
-        filename = Path(chunk.metadata.get("source", "unknown")).name.split("/")[-1]  # Show only the file name, not the full path
+        filename = Path(chunk.metadata.get("source", "unknown")).name.split('\\')[-1]  # Show only the file name, not the full path
         page = chunk.metadata.get("page", 0) + 1  # PyPDFLoader pages are 0-indexed
         parts.append(f"[Source {i}: {filename}, Page {page}]\n{chunk.page_content}")
     return "\n\n".join(parts)
@@ -81,7 +81,7 @@ def extract_sources(chunks: list[Document]) -> list[Source]:
         filename = Path(chunk.metadata.get("source", "unknown")).name
         page = chunk.metadata.get("page", 0) + 1
         key = (filename, page)
-        filename_display = filename.split("/")[-1]  # Show only the file name, not the full path
+        filename_display = filename.split('\\')[-1]  # Show only the file name, not the full path
         if key not in seen:
             seen.add(key)
             sources.append(Source(filename=filename_display, page=page))
