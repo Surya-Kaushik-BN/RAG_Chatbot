@@ -641,7 +641,6 @@ def main() -> None:
             value=st.session_state.flashcard_total,
             key="flashcard_total",
         )
-        st.session_state.flashcard_total = question_count
 
         if not st.session_state.flashcard_active:
             if st.button("Start Flashcards", use_container_width=True, key="start_flashcards"):
