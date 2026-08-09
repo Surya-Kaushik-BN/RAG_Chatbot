@@ -279,12 +279,12 @@ def inject_custom_styles() -> None:
         }
 
         /* Remove the dark box from the fixed chat input specifically */
-        # div[data-testid="stChatInput"] > div > textarea {
-        #     background: transparent !important;
-        #     border: none !important;
-        #     box-shadow: none !important;
-        #     color: #1a202c !important; /* Set text color to match the page */
-        # }
+        div[data-testid="stChatInput"] > div > textarea {
+            background: transparent !important;
+            border: none !important;
+            box-shadow: none !important;
+            color: #1a202c !important; /* Set text color to match the page */
+        }
 
 
         .css-1v0mbdj h2, .css-1v0mbdj h3,
