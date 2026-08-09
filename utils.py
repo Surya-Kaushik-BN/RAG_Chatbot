@@ -8,6 +8,7 @@ in both ingest.py and app.py.
 """
 
 import os
+import streamlit as st
 from pathlib import Path
 from typing import List
 
@@ -39,11 +40,19 @@ def load_env() -> None:
 
 def get_openrouter_api_key() -> str:
     """
-    Read the OpenRouter API key from the environment.
+    Read the OpenRouter API key.
+
+    It first checks Streamlit's secrets manager (for cloud deployment) and
+    then falls back to environment variables (for local .env files).
 
     Raises a clear error if it is missing, so the app can show a
     friendly message instead of crashing with a cryptic traceback.
     """
+    # First, try to get from Streamlit's secrets management
+    if "OPENROUTER_API_KEY" in st.secrets:
+        return st.secrets["OPENROUTER_API_KEY"]
+
+    # Fallback for local development using .env file
     api_key = os.getenv("OPENROUTER_API_KEY", "").strip()
     if not api_key:
         raise ValueError(
@@ -55,7 +64,13 @@ def get_openrouter_api_key() -> str:
 
 def get_openrouter_model() -> str:
     """Read the configured LLM model name, falling back to a sensible default."""
-    return os.getenv("OPENROUTER_MODEL", "deepseek/deepseek-chat-v3.1:free").strip()
+    # First, try to get from Streamlit's secrets management
+    if "OPENROUTER_MODEL" in st.secrets:
+        return st.secrets["OPENROUTER_MODEL"]
+
+    # Fallback for local development using .env file
+    default_model = "deepseek/deepseek-chat-v3.1:free"
+    return os.getenv("OPENROUTER_MODEL", default_model).strip()
 
 
 def get_pdf_files(documents_dir: Path = DOCUMENTS_DIR) -> List[Path]:

@@ -224,6 +224,7 @@ def generate_flashcard(
     context = format_context(chunks)
     try:
         answer_text = call_llm(context, prompt)
+        print(f"Answer ----- {answer_text}")
     except Exception as exc:
         raise RuntimeError(f"The AI model could not be reached: {exc}") from exc
 

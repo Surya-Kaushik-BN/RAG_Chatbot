@@ -30,3 +30,4 @@ Thumbs.db
 *.log
 
 .devcontainer/
+.vscode/

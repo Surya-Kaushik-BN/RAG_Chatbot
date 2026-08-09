@@ -659,13 +659,7 @@ def main() -> None:
     )
 
     st.set_page_config(page_title="Finance & Marketing Interview Assistant", page_icon="💼")
-    logging.info("Streamlit app started.")
     load_env()
-    if "OPENROUTER_API_KEY" in st.secrets:
-        os.environ["OPENROUTER_API_KEY"] = st.secrets["OPENROUTER_API_KEY"]
-
-    if "OPENROUTER_MODEL" in st.secrets:
-        os.environ["OPENROUTER_MODEL"] = st.secrets["OPENROUTER_MODEL"]
 
     init_session_state()
     init_flashcard_state()
@@ -767,6 +761,7 @@ def main() -> None:
                     st.session_state.flashcard_history = []
                     st.session_state.flashcard_flipped = False
                     start_flashcard_card(vectorstore, domain_filter, topic, difficulty)
+                    st.rerun()
 
         else:
             if not st.session_state.flashcard_history:
@@ -972,3 +967,9 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
+    
+    # vectorstore = load_vectorstore()
+    # domain_filter = "marketing"
+    # topic = "STP"
+    # difficulty = "Easy" 
+    # start_flashcard_card(vectorstore, domain_filter, topic, difficulty)
