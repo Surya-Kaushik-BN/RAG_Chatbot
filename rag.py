@@ -58,9 +58,17 @@ def load_vectorstore() -> Chroma:
     )
 
 
-def retrieve_chunks(vectorstore: Chroma, question: str, top_k: int = TOP_K) -> list[Document]:
+def retrieve_chunks(
+    vectorstore: Chroma,
+    question: str,
+    domain: str = "all",
+    top_k: int = TOP_K,
+) -> list[Document]:
     """Run a similarity search and return the top-k most relevant chunks."""
-    return vectorstore.similarity_search(question, k=top_k)
+    metadata_filter = None
+    if domain and domain.lower() != "all":
+        metadata_filter = {"domain": domain.lower()}
+    return vectorstore.similarity_search(question, k=top_k, filter=metadata_filter)
 
 
 def format_context(chunks: list[Document]) -> str:
@@ -106,7 +114,7 @@ def call_llm(context: str, question: str) -> str:
     return response.choices[0].message.content.strip()
 
 
-def answer_question(vectorstore: Chroma, question: str) -> RagAnswer:
+def answer_question(vectorstore: Chroma, question: str, domain: str = "all") -> RagAnswer:
     """
     Full RAG pipeline for one question: retrieve -> build context -> call LLM.
 
@@ -118,7 +126,7 @@ def answer_question(vectorstore: Chroma, question: str) -> RagAnswer:
     if not question:
         raise ValueError("Please enter a question.")
 
-    chunks = retrieve_chunks(vectorstore, question)
+    chunks = retrieve_chunks(vectorstore, question, domain=domain)
 
     if not chunks:
         return RagAnswer(
@@ -131,6 +139,40 @@ def answer_question(vectorstore: Chroma, question: str) -> RagAnswer:
 
     try:
         answer_text = call_llm(context, question)
+    except Exception as exc:
+        raise RuntimeError(f"The AI model could not be reached: {exc}") from exc
+
+    return RagAnswer(
+        answer=answer_text,
+        sources=extract_sources(chunks),
+        retrieved_chunks=chunks,
+    )
+
+
+def answer_task(
+    vectorstore: Chroma,
+    task_text: str,
+    domain: str = "all",
+    top_k: int = TOP_K * 2,
+) -> RagAnswer:
+    """Run RAG for a task-oriented prompt such as flashcards, cheat sheets, or rapid-fire questions."""
+    task_text = task_text.strip()
+    if not task_text:
+        raise ValueError("Please provide a task or prompt.")
+
+    chunks = retrieve_chunks(vectorstore, task_text, domain=domain, top_k=top_k)
+
+    if not chunks:
+        return RagAnswer(
+            answer="I couldn't find enough material in the selected domain to complete this task.",
+            sources=[],
+            retrieved_chunks=[],
+        )
+
+    context = format_context(chunks)
+
+    try:
+        answer_text = call_llm(context, task_text)
     except Exception as exc:
         raise RuntimeError(f"The AI model could not be reached: {exc}") from exc
 

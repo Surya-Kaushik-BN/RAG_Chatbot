@@ -20,6 +20,18 @@ CHROMA_DIR = BASE_DIR / "chroma_db"
 COLLECTION_NAME = "interview_prep"
 
 
+def get_domain_for_path(path: Path) -> str:
+    """Infer the domain from the PDF path or filename."""
+    normalized = path.name.lower()
+    parent_names = {part.lower() for part in path.parts}
+
+    if "finance" in parent_names or "finance" in normalized:
+        return "finance"
+    if "marketing" in parent_names or "marketing" in normalized:
+        return "marketing"
+    return "all"
+
+
 def load_env() -> None:
     """Load variables from the .env file into the environment."""
     load_dotenv(BASE_DIR / ".env")
@@ -47,10 +59,10 @@ def get_openrouter_model() -> str:
 
 
 def get_pdf_files(documents_dir: Path = DOCUMENTS_DIR) -> List[Path]:
-    """Return a list of all PDF files inside the documents folder."""
+    """Return a list of all PDF files inside the documents folder and subfolders."""
     if not documents_dir.exists():
         return []
-    return sorted(documents_dir.glob("*.pdf"))
+    return sorted(documents_dir.rglob("*.pdf"), key=lambda path: str(path).lower())
 
 
 def ensure_folders_exist() -> None:

@@ -122,6 +122,11 @@ This reads every PDF, splits it into chunks, creates embeddings, and
 stores them in `chroma_db/`. It's safe to re-run this after adding new
 PDFs — already-ingested chunks are skipped, not duplicated.
 
+> Tip: To enable domain filtering in the app, place finance and marketing
+> materials in separate folders like `documents/finance/` and
+> `documents/marketing/`, or include `finance` / `marketing` in the PDF
+> filename.
+
 ## Launching the App
 
 ```bash

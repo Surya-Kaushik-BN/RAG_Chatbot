@@ -10,7 +10,7 @@ easy to read.
 import os
 import streamlit as st
 
-from rag import answer_question, load_vectorstore
+from rag import answer_question, answer_task, load_vectorstore
 from utils import get_openrouter_api_key, get_pdf_files, load_env
 
 SUGGESTED_QUESTIONS = [
@@ -20,8 +20,7 @@ SUGGESTED_QUESTIONS = [
     "Explain CAPM",
     "What is STP Marketing?",
     "What is EBITDA?",
-    "Explain Working Capital",
-    "Tell me about the STAR interview framework",
+    "Explain Working Capital"
 ]
 
 
@@ -31,9 +30,18 @@ def init_session_state() -> None:
         st.session_state.messages = []  # list of {"role", "content", "sources"}
 
 
-def render_sidebar() -> None:
-    """Sidebar with suggested questions and a button to clear the chat."""
+def render_sidebar() -> str:
+    """Sidebar with domain selection, suggested questions, and clear chat."""
     with st.sidebar:
+        st.header("Choose domain")
+        selected_domain = st.selectbox(
+            "Subject",
+            ["All", "Finance", "Marketing"],
+            index=0,
+            help="Filter chat, flashcards, and cheat sheets by either finance or marketing material.",
+        )
+
+        st.divider()
         st.header("Suggested Questions")
         for question in SUGGESTED_QUESTIONS:
             if st.button(question, use_container_width=True):
@@ -43,6 +51,8 @@ def render_sidebar() -> None:
         if st.button("Clear Chat", use_container_width=True):
             st.session_state.messages = []
             st.rerun()
+
+    return selected_domain
 
 
 def render_chat_history() -> None:
@@ -69,7 +79,7 @@ def render_retrieved_context(chunks: list) -> None:
             st.text(chunk.page_content)
 
 
-def handle_question(question: str, vectorstore) -> None:
+def handle_question(question: str, vectorstore, domain: str = "all") -> None:
     """Run the RAG pipeline for a question and render the result in the chat."""
     st.session_state.messages.append({"role": "user", "content": question, "sources": None})
     with st.chat_message("user"):
@@ -78,7 +88,7 @@ def handle_question(question: str, vectorstore) -> None:
     with st.chat_message("assistant"):
         with st.spinner("Searching interview material and generating an answer..."):
             try:
-                result = answer_question(vectorstore, question)
+                result = answer_question(vectorstore, question, domain=domain)
             except ValueError as exc:
                 st.warning(str(exc))
                 return
@@ -97,6 +107,25 @@ def handle_question(question: str, vectorstore) -> None:
     )
 
 
+def handle_task(prompt: str, vectorstore, domain: str = "all") -> None:
+    """Run a non-chat task prompt and render the result."""
+    with st.spinner("Generating material from the interview resources..."):
+        try:
+            result = answer_task(vectorstore, prompt, domain=domain)
+        except ValueError as exc:
+            st.warning(str(exc))
+            return
+        except RuntimeError as exc:
+            st.error(str(exc))
+            return
+
+    st.markdown(result.answer)
+    if result.sources:
+        render_sources(result.sources)
+    if result.retrieved_chunks:
+        render_retrieved_context(result.retrieved_chunks)
+
+
 def main() -> None:
     st.set_page_config(page_title="Finance & Marketing Interview Assistant", page_icon="💼")
     load_env()
@@ -110,8 +139,6 @@ def main() -> None:
 
     st.title("Finance & Marketing Interview Assistant")
     st.caption("Prepare smarter using your interview material.")
-
-    render_sidebar()
 
     # Guard rail: check the API key early so the error is clear, not a
     # stack trace when the user finally sends a question.
@@ -142,15 +169,53 @@ def main() -> None:
         )
         return
 
+    selected_domain = render_sidebar()
+    domain_filter = selected_domain.lower()
+    if domain_filter not in {"finance", "marketing"}:
+        domain_filter = "all"
+
     render_chat_history()
 
-    # A sidebar button sets this; treat it just like typed input
-    question = st.chat_input("Ask a finance or marketing interview question...")
-    if "pending_question" in st.session_state:
-        question = st.session_state.pop("pending_question")
+    tabs = st.tabs(["Chat", "Flashcards", "Rapid Fire", "Cheat Sheet"])
 
-    if question:
-        handle_question(question, vectorstore)
+    with tabs[0]:
+        st.subheader(f"Chat ({selected_domain})")
+        question = st.chat_input("Ask a finance or marketing interview question...")
+        if "pending_question" in st.session_state:
+            question = st.session_state.pop("pending_question")
+
+        if question:
+            handle_question(question, vectorstore, domain_filter)
+
+    with tabs[1]:
+        st.subheader(f"Flashcards ({selected_domain})")
+        num_cards = st.slider("How many flashcards?", min_value=3, max_value=10, value=5)
+        if st.button("Generate Flashcards", use_container_width=True):
+            prompt = (
+                f"Create {num_cards} short review flashcards from the {selected_domain} material. "
+                "Present them as a series of question-and-answer pairs that are easy to revise."
+            )
+            handle_task(prompt, vectorstore, domain_filter)
+
+    with tabs[2]:
+        st.subheader(f"Rapid Fire ({selected_domain})")
+        difficulty = st.selectbox("Difficulty", ["Easy", "Medium", "Hard"])
+        question_count = st.slider("Number of rapid-fire questions", min_value=3, max_value=10, value=5)
+        if st.button("Start Rapid Fire", use_container_width=True):
+            prompt = (
+                f"Create {question_count} rapid-fire interview questions for {selected_domain}. "
+                f"Include brief answers and label the difficulty as {difficulty}. Keep the format easy to scan."
+            )
+            handle_task(prompt, vectorstore, domain_filter)
+
+    with tabs[3]:
+        st.subheader(f"Cheat Sheet ({selected_domain})")
+        if st.button("Generate Cheat Sheet", use_container_width=True):
+            prompt = (
+                f"Create a concise cheat sheet from the {selected_domain} material. "
+                "Include key frameworks, definitions, formulas, and practical examples from the source material."
+            )
+            handle_task(prompt, vectorstore, domain_filter)
 
 
 if __name__ == "__main__":

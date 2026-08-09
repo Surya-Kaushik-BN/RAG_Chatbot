@@ -22,7 +22,14 @@ from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_chroma import Chroma
 from langchain_core.documents import Document
 
-from utils import DOCUMENTS_DIR, CHROMA_DIR, COLLECTION_NAME, get_pdf_files, ensure_folders_exist
+from utils import (
+    DOCUMENTS_DIR,
+    CHROMA_DIR,
+    COLLECTION_NAME,
+    get_pdf_files,
+    ensure_folders_exist,
+    get_domain_for_path,
+)
 
 # Chunking settings (as specified by the project requirements)
 CHUNK_SIZE = 800
@@ -50,10 +57,13 @@ def load_pdfs() -> list[Document]:
     all_pages: list[Document] = []
 
     for pdf_path in pdf_files:
-        print(f"Loading: {pdf_path.name}")
+        domain = get_domain_for_path(pdf_path)
+        print(f"Loading: {pdf_path.name} ({domain})")
         try:
             loader = PyPDFLoader(str(pdf_path))
             pages = loader.load()
+            for page in pages:
+                page.metadata["domain"] = domain
             all_pages.extend(pages)
             print(f"  -> loaded {len(pages)} page(s)")
         except Exception as exc:
@@ -72,6 +82,11 @@ def split_into_chunks(pages: list[Document]) -> list[Document]:
     chunks = splitter.split_documents(pages)
     print(f"Split {len(pages)} page(s) into {len(chunks)} chunk(s)")
     return chunks
+
+
+def batch_items(items: list, batch_size: int) -> list[list]:
+    """Split a list into smaller batches."""
+    return [items[i : i + batch_size] for i in range(0, len(items), batch_size)]
 
 
 def ingest() -> None:
@@ -108,7 +123,10 @@ def ingest() -> None:
     # Figure out which chunks are genuinely new, so we don't create duplicates
     # when this script is run more than once.
     chunk_ids = [make_chunk_id(chunk) for chunk in chunks]
-    existing_ids = set(vectorstore.get(ids=chunk_ids)["ids"])
+    existing_ids = set()
+    for batch_ids in batch_items(chunk_ids, batch_size=5000):
+        result = vectorstore.get(ids=batch_ids)
+        existing_ids.update(result["ids"])
 
     new_chunks = []
     new_ids = []
@@ -123,7 +141,11 @@ def ingest() -> None:
 
     print(f"\nAdding {len(new_chunks)} new chunk(s) to ChromaDB "
           f"({len(chunks) - len(new_chunks)} already existed)...")
-    vectorstore.add_documents(documents=new_chunks, ids=new_ids)
+    for chunk_batch, id_batch in zip(
+        batch_items(new_chunks, batch_size=2500),
+        batch_items(new_ids, batch_size=2500),
+    ):
+        vectorstore.add_documents(documents=chunk_batch, ids=id_batch)
 
     print("\nIngestion complete!")
     print(f"Total chunks in collection now: {vectorstore._collection.count()}")
