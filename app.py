@@ -260,7 +260,7 @@ def inject_custom_styles() -> None:
         textarea[placeholder^="Ask a"] {
             position: fixed !important;
             bottom: 24px !important;
-            left: 500px !important; /* align with main content (sidebar width + padding) */
+            left: 550px !important; /* align with main content (sidebar width + padding) */
             right: auto !important;
             width: calc(100% - 368px) !important; /* viewport width - sidebar - padding */
             max-width: 730px !important; /* Streamlit's default max-width for the main content area */
