@@ -337,16 +337,15 @@ def parse_quiz_question_output(text: str) -> dict:
         re.IGNORECASE | re.DOTALL,
     )
     match = pattern.search(text)
-    if match:
+    if match and match.group(1).strip() and match.group(2).strip() and match.group(3).strip():
         return {
             "question": match.group(1).strip(),
             "ideal_answer": match.group(2).strip(),
             "rubric": match.group(3).strip(),
         }
 
-    # Fallback when the exact format is not followed
     return {
-        "question": text.strip(),
+        "question": "",
         "ideal_answer": "",
         "rubric": "",
     }
@@ -359,14 +358,14 @@ def parse_flashcard_output(text: str) -> dict:
         re.IGNORECASE | re.DOTALL,
     )
     match = pattern.search(text)
-    if match:
+    if match and match.group(1).strip() and match.group(2).strip():
         return {
             "front": match.group(1).strip(),
             "back": match.group(2).strip(),
         }
 
     return {
-        "front": text.strip(),
+        "front": "",
         "back": "",
     }
 
