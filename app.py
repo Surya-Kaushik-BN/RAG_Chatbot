@@ -8,6 +8,7 @@ results. All the actual RAG logic lives in rag.py so this file stays
 easy to read.
 """
 import os
+import logging
 import re
 import streamlit as st
 
@@ -332,6 +333,7 @@ def render_retrieved_context(chunks: list) -> None:
 
 def parse_quiz_question_output(text: str) -> dict:
     """Parse the quiz question, ideal answer, and rubric from the LLM response."""
+    logging.info(f"Parsing quiz question. Raw text: '{text[:100]}...'")
     pattern = re.compile(
         r"QUESTION:\s*(.*?)\s*IDEAL ANSWER:\s*(.*?)\s*RUBRIC:\s*(.*)",
         re.IGNORECASE | re.DOTALL,
@@ -344,6 +346,7 @@ def parse_quiz_question_output(text: str) -> dict:
             "rubric": match.group(3).strip(),
         }
 
+    logging.warning(f"Failed to parse quiz question from text: '{text[:100]}...'")
     return {
         "question": "",
         "ideal_answer": "",
@@ -353,6 +356,7 @@ def parse_quiz_question_output(text: str) -> dict:
 
 def parse_flashcard_output(text: str) -> dict:
     """Parse the flashcard front and back from the LLM response."""
+    logging.info(f"Parsing flashcard output. Raw text: '{text[:100]}...'")
     pattern = re.compile(
         r"FRONT:\s*(.*?)\s*BACK:\s*(.*)",
         re.IGNORECASE | re.DOTALL,
@@ -364,6 +368,7 @@ def parse_flashcard_output(text: str) -> dict:
             "back": match.group(2).strip(),
         }
 
+    logging.warning(f"Failed to parse flashcard from text: '{text[:100]}...'")
     return {
         "front": "",
         "back": "",
@@ -507,6 +512,7 @@ def start_flashcard_card(
     topic: str,
     difficulty: str,
 ) -> None:
+    logging.info(f"Generating flashcard for domain='{domain}', topic='{topic}', difficulty='{difficulty}'")
     prompt_results = generate_flashcard(
         vectorstore=vectorstore,
         topic=topic,
@@ -514,6 +520,7 @@ def start_flashcard_card(
         previous_terms=[card["front"] for card in st.session_state.flashcard_history],
         domain=domain,
     )
+    logging.info(f"Raw flashcard response from LLM: '{prompt_results.answer}'")
     parsed = parse_flashcard_output(prompt_results.answer)
 
     # Only add the card if the front is not empty
@@ -523,6 +530,7 @@ def start_flashcard_card(
             "back": parsed["back"],
             "sources": prompt_results.sources or [],
         }
+        logging.info(f"Successfully created flashcard: {card['front']}")
 
         if st.session_state.flashcard_index < len(st.session_state.flashcard_history) - 1:
             st.session_state.flashcard_history[st.session_state.flashcard_index] = card
@@ -539,6 +547,7 @@ def start_rapid_fire_question(
     topic: str,
     difficulty: str,
 ) -> None:
+    logging.info(f"Generating rapid-fire question for domain='{domain}', topic='{topic}', difficulty='{difficulty}'")
     prompt_results = generate_rapid_fire_question(
         vectorstore=vectorstore,
         topic=topic,
@@ -546,6 +555,7 @@ def start_rapid_fire_question(
         previous_questions=st.session_state.rapid_fire_asked_questions,
         domain=domain,
     )
+    logging.info(f"Raw rapid-fire response from LLM: '{prompt_results.answer}'")
     parsed = parse_quiz_question_output(prompt_results.answer)
 
     # Only update the state if a valid question was parsed
@@ -562,6 +572,7 @@ def start_rapid_fire_question(
             st.session_state.rapid_fire_asked_questions.append(
                 st.session_state.rapid_fire_current_question
             )
+        logging.info(f"Successfully created rapid-fire question: {parsed['question']}")
 
 
 def evaluate_rapid_fire_response(vectorstore, domain: str) -> None:
@@ -589,6 +600,7 @@ def evaluate_rapid_fire_response(vectorstore, domain: str) -> None:
 
 def handle_question(question: str, vectorstore, domain: str = "all") -> None:
     """Run the RAG pipeline for a question and render the result in the chat."""
+    logging.info(f"Handling user question: '{question}'")
     st.session_state.messages.append({"role": "user", "content": question, "sources": None})
     with st.chat_message("user"):
         st.markdown(question)
@@ -598,10 +610,13 @@ def handle_question(question: str, vectorstore, domain: str = "all") -> None:
             try:
                 # Pass the recent conversation so the model can handle follow-ups
                 result = answer_question(vectorstore, question, domain=domain, conversation=st.session_state.messages)
+                logging.info(f"LLM answer received: '{result.answer[:100]}...'")
             except ValueError as exc:
+                logging.error(f"ValueError in handle_question: {exc}")
                 st.warning(str(exc))
                 return
             except RuntimeError as exc:
+                logging.error(f"RuntimeError in handle_question: {exc}")
                 st.error(str(exc))
                 return
 
@@ -636,7 +651,15 @@ def handle_task(prompt: str, vectorstore, domain: str = "all") -> None:
 
 
 def main() -> None:
+    # Configure logging
+    logging.basicConfig(
+        level=logging.INFO,
+        format="%(asctime)s - %(levelname)s - %(message)s",
+        datefmt="%Y-%m-%d %H:%M:%S",
+    )
+
     st.set_page_config(page_title="Finance & Marketing Interview Assistant", page_icon="💼")
+    logging.info("Streamlit app started.")
     load_env()
     if "OPENROUTER_API_KEY" in st.secrets:
         os.environ["OPENROUTER_API_KEY"] = st.secrets["OPENROUTER_API_KEY"]
@@ -657,6 +680,7 @@ def main() -> None:
     try:
         get_openrouter_api_key()
     except ValueError as exc:
+        logging.critical(f"API key error: {exc}")
         st.error(str(exc))
         return
 
@@ -671,10 +695,12 @@ def main() -> None:
     try:
         vectorstore = load_vectorstore()
     except Exception as exc:
+        logging.critical(f"Failed to load vectorstore: {exc}")
         st.error(f"Could not load the document database: {exc}")
         return
 
     if vectorstore._collection.count() == 0:
+        logging.warning("Vectorstore is empty. Ingestion may be needed.")
         st.warning(
             "Your document database is empty. Run `python ingest.py` to "
             "process the PDFs in documents/ before asking questions."

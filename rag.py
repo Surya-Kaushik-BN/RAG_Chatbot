@@ -205,13 +205,29 @@ def generate_flashcard(
     domain: str = "all",
     top_k: int = TOP_K * 3,
 ) -> RagAnswer:
-    """Generate exactly one flashcard from the selected domain and topic."""
+    """Generate exactly one flashcard from the selected domain and topic.
+
+    This is a special case where we retrieve chunks based on the topic, but
+    use a different prompt for the final LLM call.
+    """
     prompt = build_flashcard_generation_prompt(
         topic=topic,
         difficulty=difficulty,
         previous_terms="\n".join(previous_terms),
     )
-    return answer_task(vectorstore, prompt, domain=domain, top_k=top_k)
+
+    # Retrieve chunks based on the *topic*, not the full prompt text
+    chunks = retrieve_chunks(vectorstore, topic, domain=domain, top_k=top_k)
+    if not chunks:
+        return RagAnswer(answer="I couldn't find enough material on that topic.")
+
+    context = format_context(chunks)
+    try:
+        answer_text = call_llm(context, prompt)
+    except Exception as exc:
+        raise RuntimeError(f"The AI model could not be reached: {exc}") from exc
+
+    return RagAnswer(answer=answer_text, sources=extract_sources(chunks), retrieved_chunks=chunks)
 
 
 def discover_cheatsheet_topics(
