@@ -259,7 +259,7 @@ def inject_custom_styles() -> None:
         textarea[aria-label="Ask a finance or marketing interview question..."],
         textarea[placeholder^="Ask a"] {
             position: fixed !important;
-            bottom: 24px !important;
+            bottom: 28px !important; /* To move it up, increase this value */
             left: 550px !important; /* align with main content (sidebar width + padding) */
             right: auto !important;
             width: calc(100% - 368px) !important; /* viewport width - sidebar - padding */
