@@ -246,6 +246,35 @@ def inject_custom_styles() -> None:
             background: transparent !important;
         }
 
+        /* Keep chat input fixed at the bottom of the viewport */
+        div[data-testid="stAppViewContainer"] .main .block-container {
+            padding-bottom: 120px !important;
+        }
+
+        /* Common selectors Streamlit may use for the chat input */
+        div[data-testid="stChatInput"],
+        section[data-testid="stChatInput"],
+        .stChatInput,
+        div[role="textbox"],
+        textarea[aria-label="Ask a finance or marketing interview question..."],
+        textarea[placeholder^="Ask a"] {
+            position: fixed !important;
+            bottom: 24px !important;
+            left: 320px !important; /* leave space for sidebar */
+            right: 32px !important;
+            z-index: 99999 !important;
+            border-radius: 20px !important;
+        }
+
+        /* Ensure the fixed input keeps its normal appearance */
+        div[data-testid="stChatInput"] input,
+        div[data-testid="stChatInput"] textarea,
+        .stChatInput input,
+        .stChatInput textarea {
+            width: 100% !important;
+            box-sizing: border-box !important;
+        }
+
         .css-1v0mbdj h2, .css-1v0mbdj h3,
         .css-1950qzw h2, .css-1950qzw h3 {
             margin-top: 0 !important;
