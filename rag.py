@@ -19,7 +19,16 @@ from langchain_chroma import Chroma
 from langchain_core.documents import Document
 from openai import OpenAI
 
-from prompts import SYSTEM_PROMPT, build_user_prompt
+from prompts import (
+    SYSTEM_PROMPT,
+    build_user_prompt,
+    build_cheatsheet_generation_prompt,
+    build_cheatsheet_subtopic_prompt,
+    build_cheatsheet_topic_prompt,
+    build_flashcard_generation_prompt,
+    build_quiz_evaluation_prompt,
+    build_quiz_generation_prompt,
+)
 from utils import (
     CHROMA_DIR,
     COLLECTION_NAME,
@@ -96,25 +105,34 @@ def extract_sources(chunks: list[Document]) -> list[Source]:
     return sources
 
 
-def call_llm(context: str, question: str) -> str:
-    """Send the system prompt + context + question to the OpenRouter LLM."""
+def call_llm(context: str, prompt: str, conversation: str | None = None) -> str:
+    """Send the system prompt + context + prompt (+ optional conversation)
+    to the OpenRouter LLM.
+    """
     api_key = get_openrouter_api_key()
     model = get_openrouter_model()
 
     client = OpenAI(base_url=OPENROUTER_BASE_URL, api_key=api_key)
 
+    user_prompt = build_user_prompt(context, prompt, conversation or "")
+
     response = client.chat.completions.create(
         model=model,
         messages=[
             {"role": "system", "content": SYSTEM_PROMPT},
-            {"role": "user", "content": build_user_prompt(context, question)},
+            {"role": "user", "content": user_prompt},
         ],
         temperature=0.2,  # low temperature keeps answers grounded and consistent
     )
     return response.choices[0].message.content.strip()
 
 
-def answer_question(vectorstore: Chroma, question: str, domain: str = "all") -> RagAnswer:
+def answer_question(
+    vectorstore: Chroma,
+    question: str,
+    domain: str = "all",
+    conversation: list[dict] | None = None,
+) -> RagAnswer:
     """
     Full RAG pipeline for one question: retrieve -> build context -> call LLM.
 
@@ -126,6 +144,7 @@ def answer_question(vectorstore: Chroma, question: str, domain: str = "all") -> 
     if not question:
         raise ValueError("Please enter a question.")
 
+    # Retrieve relevant context from the vectorstore
     chunks = retrieve_chunks(vectorstore, question, domain=domain)
 
     if not chunks:
@@ -137,8 +156,20 @@ def answer_question(vectorstore: Chroma, question: str, domain: str = "all") -> 
 
     context = format_context(chunks)
 
+    # Build a short conversation string from the provided conversation list
+    conv_text = ""
+    if conversation:
+        # Keep only the last few turns (3) to avoid overly long prompts
+        recent = conversation[-3:]
+        parts = []
+        for msg in recent:
+            role = msg.get("role", "user")
+            content = msg.get("content", "")
+            parts.append(f"{role.title()}: {content}")
+        conv_text = "\n".join(parts)
+
     try:
-        answer_text = call_llm(context, question)
+        answer_text = call_llm(context, question, conversation=conv_text)
     except Exception as exc:
         raise RuntimeError(f"The AI model could not be reached: {exc}") from exc
 
@@ -147,6 +178,94 @@ def answer_question(vectorstore: Chroma, question: str, domain: str = "all") -> 
         sources=extract_sources(chunks),
         retrieved_chunks=chunks,
     )
+
+
+def generate_rapid_fire_question(
+    vectorstore: Chroma,
+    topic: str,
+    difficulty: str,
+    previous_questions: list[str],
+    domain: str = "all",
+    top_k: int = TOP_K * 3,
+) -> RagAnswer:
+    """Generate one new rapid-fire question plus its ideal answer and rubric."""
+    prompt = build_quiz_generation_prompt(
+        topic=topic,
+        difficulty=difficulty,
+        previous_questions="\n".join(previous_questions),
+    )
+    return answer_task(vectorstore, prompt, domain=domain, top_k=top_k)
+
+
+def generate_flashcard(
+    vectorstore: Chroma,
+    topic: str,
+    difficulty: str,
+    previous_terms: list[str],
+    domain: str = "all",
+    top_k: int = TOP_K * 3,
+) -> RagAnswer:
+    """Generate exactly one flashcard from the selected domain and topic."""
+    prompt = build_flashcard_generation_prompt(
+        topic=topic,
+        difficulty=difficulty,
+        previous_terms="\n".join(previous_terms),
+    )
+    return answer_task(vectorstore, prompt, domain=domain, top_k=top_k)
+
+
+def discover_cheatsheet_topics(
+    vectorstore: Chroma,
+    domain: str = "all",
+    top_k: int = TOP_K * 3,
+) -> RagAnswer:
+    """Discover actual topic names from the selected domain documents."""
+    prompt = build_cheatsheet_topic_prompt(domain=domain)
+    return answer_task(vectorstore, prompt, domain=domain, top_k=top_k)
+
+
+def discover_cheatsheet_subtopics(
+    vectorstore: Chroma,
+    topic: str,
+    domain: str = "all",
+    top_k: int = TOP_K * 3,
+) -> RagAnswer:
+    """Discover actual subtopics for a topic from the selected domain documents."""
+    prompt = build_cheatsheet_subtopic_prompt(domain=domain, topic=topic)
+    return answer_task(vectorstore, prompt, domain=domain, top_k=top_k)
+
+
+def generate_cheatsheet(
+    vectorstore: Chroma,
+    domain: str,
+    topic: str,
+    subtopic: str,
+    top_k: int = TOP_K * 3,
+) -> RagAnswer:
+    """Generate a focused cheatsheet for the selected topic/subtopic."""
+    prompt = build_cheatsheet_generation_prompt(
+        domain=domain,
+        topic=topic,
+        subtopic=subtopic,
+    )
+    return answer_task(vectorstore, prompt, domain=domain, top_k=top_k)
+
+
+def evaluate_rapid_fire_answer(
+    vectorstore: Chroma,
+    question: str,
+    ideal_answer: str,
+    student_answer: str,
+    domain: str = "all",
+    top_k: int = TOP_K * 3,
+) -> RagAnswer:
+    """Evaluate a student's answer to the current rapid-fire question."""
+    prompt = build_quiz_evaluation_prompt(
+        question=question,
+        ideal_answer=ideal_answer,
+        student_answer=student_answer,
+    )
+    return answer_task(vectorstore, prompt, domain=domain, top_k=top_k)
 
 
 def answer_task(
