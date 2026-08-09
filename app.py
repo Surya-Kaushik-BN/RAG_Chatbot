@@ -154,14 +154,20 @@ def inject_custom_styles() -> None:
         .stTextInput>div>input, .stSelectbox>div>div>div>div, .stTextArea>div>textarea {
             border-radius: 16px !important;
             border: 1px solid rgba(37, 99, 235, .22) !important;
-            background: #f2f7ff !important;
+            background: #1d4ed8 !important;
+            color: #ffffff !important;
             padding: 0.88rem !important;
             box-shadow: inset 0 1px 2px rgba(37, 99, 235, .08) !important;
         }
 
+        .stTextInput>div>input::placeholder, .stSelectbox>div>div>div>div::placeholder, .stTextArea>div>textarea::placeholder {
+            color: rgba(255, 255, 255, 0.6) !important;
+        }
+
         .stTextInput>div>input:focus, .stSelectbox>div>div>div>div:focus, .stTextArea>div>textarea:focus {
-            outline: 2px solid rgba(37, 99, 235, .35) !important;
+            outline: 2px solid rgba(255, 255, 255, .35) !important;
             outline-offset: 2px !important;
+            background: #2563eb !important;
         }
 
         h1, h2, h3, h4, h5, h6 {
