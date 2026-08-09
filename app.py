@@ -151,7 +151,7 @@ def inject_custom_styles() -> None:
             outline-offset: 3px !important;
         }
 
-        .stTextInput>div>input, .stSelectbox>div>div>div>div, .stTextArea>div>textarea {
+        .stTextInput>div>input, .stSelectbox>div>div>div>div, .stTextArea>div>textarea, input, textarea {
             border-radius: 16px !important;
             border: 1px solid rgba(37, 99, 235, .22) !important;
             background: #1d4ed8 !important;
@@ -160,14 +160,16 @@ def inject_custom_styles() -> None:
             box-shadow: inset 0 1px 2px rgba(37, 99, 235, .08) !important;
         }
 
-        .stTextInput>div>input::placeholder, .stSelectbox>div>div>div>div::placeholder, .stTextArea>div>textarea::placeholder {
+        .stTextInput>div>input::placeholder, .stSelectbox>div>div>div>div::placeholder, .stTextArea>div>textarea::placeholder, input::placeholder, textarea::placeholder {
             color: rgba(255, 255, 255, 0.6) !important;
         }
 
-        .stTextInput>div>input:focus, .stSelectbox>div>div>div>div:focus, .stTextArea>div>textarea:focus {
+        .stTextInput>div>input:focus, .stSelectbox>div>div>div>div:focus, .stTextArea>div>textarea:focus, input:focus, textarea:focus {
             outline: 2px solid rgba(255, 255, 255, .35) !important;
             outline-offset: 2px !important;
             background: #2563eb !important;
+            color: #ffffff !important;
+        }
         }
 
         h1, h2, h3, h4, h5, h6 {
