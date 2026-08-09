@@ -260,10 +260,10 @@ def inject_custom_styles() -> None:
         textarea[placeholder^="Ask a"] {
             position: fixed !important;
             bottom: 24px !important;
-            left: 320px !important; /* align with main content (leave sidebar) */
+            left: 336px !important; /* align with main content (sidebar width + padding) */
             right: auto !important;
-            width: calc(100% - 420px) !important;
-            max-width: 1000px !important; /* prevent it from becoming too wide on large screens */
+            width: calc(100% - 368px) !important; /* viewport width - sidebar - padding */
+            max-width: 730px !important; /* Streamlit's default max-width for the main content area */
             transform: none !important;
             z-index: 99999 !important;
             border-radius: 20px !important;
@@ -678,7 +678,7 @@ def main() -> None:
         st.subheader(f"Chat ({selected_domain})")
         
         # Create a container for scrollable chat history
-        chat_container = st.container(height=150, border=False)
+        chat_container = st.container(border=False)
         with chat_container:
             render_chat_history()
 
