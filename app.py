@@ -186,6 +186,20 @@ def inject_custom_styles() -> None:
         .stMarkdown h2 { color: #1d4ed8 !important; }
         .stMarkdown h3 { color: #2563eb !important; }
 
+        .stMarkdown, .stMarkdown p, .stMarkdown span, .stMarkdown div {
+            color: #1a202c !important;
+        }
+
+        p, span, div:not([data-testid="stSidebar"] div) {
+            color: #1a202c !important;
+        }
+
+        section[data-testid="stSidebar"] p,
+        section[data-testid="stSidebar"] span,
+        section[data-testid="stSidebar"] div {
+            color: #f8f9ff !important;
+        }
+
         section[data-testid="stChatMessage"] .css-1n76uvr,
         section[data-testid="stChatMessage"] .css-1f1f2m6,
         [data-testid="stChatMessage"] > div {
@@ -623,8 +637,14 @@ def main() -> None:
 
     with tabs[0]:
         st.subheader(f"Chat ({selected_domain})")
-        render_chat_history()
+        
+        # Create a container for scrollable chat history
+        chat_container = st.container(height=500, border=False)
+        with chat_container:
+            render_chat_history()
 
+        # Input section always stays at bottom
+        st.divider()
         question = st.chat_input("Ask a finance or marketing interview question...", key="chat_input")
         if "pending_question" in st.session_state:
             question = st.session_state.pop("pending_question")
