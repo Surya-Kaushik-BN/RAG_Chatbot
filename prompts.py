@@ -156,18 +156,6 @@ def build_cheatsheet_generation_prompt(
     )
 
 
-def build_flashcard_generation_prompt(
-    topic: str,
-    difficulty: str,
-    previous_terms: str,
-) -> str:
-    return FLASHCARD_GENERATION_PROMPT.format(
-        topic=topic,
-        difficulty=difficulty,
-        previous_terms=previous_terms or "None",
-    )
-
-
 QUIZ_GENERATION_PROMPT = """Create exactly one interview-style question from the provided context.
 
 Topic: {topic}

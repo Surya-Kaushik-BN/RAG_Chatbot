@@ -516,16 +516,19 @@ def start_flashcard_card(
         domain=domain,
     )
     parsed = parse_flashcard_output(prompt_results.answer)
-    card = {
-        "front": parsed["front"],
-        "back": parsed["back"],
-        "sources": prompt_results.sources or [],
-    }
 
-    if st.session_state.flashcard_index < len(st.session_state.flashcard_history) - 1:
-        st.session_state.flashcard_history[st.session_state.flashcard_index] = card
-    else:
-        st.session_state.flashcard_history.append(card)
+    # Only add the card if the front is not empty
+    if parsed.get("front"):
+        card = {
+            "front": parsed["front"],
+            "back": parsed["back"],
+            "sources": prompt_results.sources or [],
+        }
+
+        if st.session_state.flashcard_index < len(st.session_state.flashcard_history) - 1:
+            st.session_state.flashcard_history[st.session_state.flashcard_index] = card
+        else:
+            st.session_state.flashcard_history.append(card)
 
     st.session_state.flashcard_flipped = False
     st.session_state.flashcard_last_error = ""
@@ -545,18 +548,21 @@ def start_rapid_fire_question(
         domain=domain,
     )
     parsed = parse_quiz_question_output(prompt_results.answer)
-    st.session_state.rapid_fire_current_question = parsed["question"]
-    st.session_state.rapid_fire_current_ideal_answer = parsed["ideal_answer"]
-    st.session_state.rapid_fire_current_rubric = parsed["rubric"]
-    st.session_state.rapid_fire_current_sources = prompt_results.sources or []
-    st.session_state.rapid_fire_question_done = False
-    st.session_state.rapid_fire_last_feedback = ""
-    st.session_state.rapid_fire_last_status = ""
-    st.session_state.rapid_fire_answer_text = ""
-    if st.session_state.rapid_fire_current_question:
-        st.session_state.rapid_fire_asked_questions.append(
-            st.session_state.rapid_fire_current_question
-        )
+
+    # Only update the state if a valid question was parsed
+    if parsed.get("question"):
+        st.session_state.rapid_fire_current_question = parsed["question"]
+        st.session_state.rapid_fire_current_ideal_answer = parsed["ideal_answer"]
+        st.session_state.rapid_fire_current_rubric = parsed["rubric"]
+        st.session_state.rapid_fire_current_sources = prompt_results.sources or []
+        st.session_state.rapid_fire_question_done = False
+        st.session_state.rapid_fire_last_feedback = ""
+        st.session_state.rapid_fire_last_status = ""
+        st.session_state.rapid_fire_answer_text = ""
+        if st.session_state.rapid_fire_current_question:
+            st.session_state.rapid_fire_asked_questions.append(
+                st.session_state.rapid_fire_current_question
+            )
 
 
 def evaluate_rapid_fire_response(vectorstore, domain: str) -> None:
