@@ -87,19 +87,16 @@ def inject_custom_styles() -> None:
         """
         <style>
         :root {
-            --bg-main: #f6f8fc;
+            --bg-main: #e8f2ff;
             --surface: #ffffff;
-            --surface-soft: #eef3fb;
-            --surface-alt: #f3f6fb;
-            --primary-navy: #0f2959;
+            --surface-soft: #f0f6ff;
+            --surface-alt: #eef4ff;
+            --primary-blue: #2563eb;
+            --primary-blue-dark: #1d4ed8;
+            --primary-blue-light: #dbeafe;
             --primary-contrast: #ffffff;
-            --finance-teal: #1ea8a1;
-            --marketing-coral: #ef7265;
-            --accent-sky: #5db7fef;
-            --accent-lavender: #c0a4f9;
-            --accent-yellow: #f4c84f;
-            --border: rgba(15, 40, 81, .12);
-            --shadow: 0 18px 40px rgba(15, 40, 81, .08);
+            --border: rgba(37, 99, 235, .18);
+            --shadow: 0 18px 40px rgba(37, 99, 235, .12);
         }
 
         html, body {
@@ -111,9 +108,9 @@ def inject_custom_styles() -> None:
         }
 
         section[data-testid="stSidebar"] {
-            background: linear-gradient(180deg, #0f2959 0%, #142f72 100%) !important;
+            background: linear-gradient(180deg, #1e40af 0%, #2563eb 100%) !important;
             color: var(--primary-contrast) !important;
-            border-right: 1px solid rgba(255, 255, 255, .08) !important;
+            border-right: 1px solid rgba(255, 255, 255, .12) !important;
         }
 
         section[data-testid="stSidebar"] .css-1d391kg,
@@ -128,25 +125,25 @@ def inject_custom_styles() -> None:
 
         .css-1v0mbdj, .css-1950qzw, .css-1psj8ta, .css-1f1f2m6, .css-1170n75 {
             background: var(--surface) !important;
-            border: 1px solid var(--border) !important;
+            border: 1px solid rgba(37, 99, 235, .12) !important;
             border-radius: 22px !important;
             box-shadow: var(--shadow) !important;
             padding: 1.2rem !important;
         }
 
         .stButton>button, .stButton button {
-            background: linear-gradient(135deg, var(--accent-sky), var(--finance-teal)) !important;
-            color: #ffffff !important;
+            background: linear-gradient(135deg, var(--primary-blue), #1d4ed8) !important;
+            color: var(--primary-contrast) !important;
             border-radius: 14px !important;
-            border: 1px solid rgba(255,255,255,.12) !important;
-            box-shadow: 0 12px 24px rgba(15, 40, 81, .12) !important;
+            border: 1px solid rgba(255,255,255,.15) !important;
+            box-shadow: 0 12px 24px rgba(37, 99, 235, .18) !important;
             padding: 0.85rem 1.3rem !important;
             font-weight: 700 !important;
         }
 
         .stButton>button:hover, .stButton button:hover {
             transform: translateY(-1px) !important;
-            filter: brightness(1.05) !important;
+            filter: brightness(1.08) !important;
         }
 
         .stButton>button:focus-visible, .stButton button:focus-visible {
@@ -156,10 +153,15 @@ def inject_custom_styles() -> None:
 
         .stTextInput>div>input, .stSelectbox>div>div>div>div, .stTextArea>div>textarea {
             border-radius: 16px !important;
-            border: 1px solid rgba(15, 40, 81, .12) !important;
-            background: #f7f9fd !important;
+            border: 1px solid rgba(37, 99, 235, .22) !important;
+            background: #f2f7ff !important;
             padding: 0.88rem !important;
-            box-shadow: inset 0 1px 2px rgba(15, 40, 81, .05) !important;
+            box-shadow: inset 0 1px 2px rgba(37, 99, 235, .08) !important;
+        }
+
+        .stTextInput>div>input:focus, .stSelectbox>div>div>div>div:focus, .stTextArea>div>textarea:focus {
+            outline: 2px solid rgba(37, 99, 235, .35) !important;
+            outline-offset: 2px !important;
         }
 
         h1, h2, h3, h4, h5, h6 {
@@ -181,8 +183,8 @@ def inject_custom_styles() -> None:
             font-weight: 700 !important;
         }
 
-        .stMarkdown h2 { color: #0f315f !important; }
-        .stMarkdown h3 { color: #1f3f72 !important; }
+        .stMarkdown h2 { color: #1d4ed8 !important; }
+        .stMarkdown h3 { color: #2563eb !important; }
 
         section[data-testid="stChatMessage"] .css-1n76uvr,
         section[data-testid="stChatMessage"] .css-1f1f2m6,
@@ -213,10 +215,10 @@ def inject_custom_styles() -> None:
         }
 
         div[role="tab"][aria-selected="true"] {
-            background: linear-gradient(135deg, var(--accent-sky), var(--finance-teal)) !important;
+            background: linear-gradient(135deg, var(--primary-blue), var(--primary-blue-dark)) !important;
             color: #ffffff !important;
             border-color: transparent !important;
-            box-shadow: 0 16px 30px rgba(15, 40, 81, .12) !important;
+            box-shadow: 0 16px 30px rgba(37, 99, 235, .18) !important;
         }
 
         [data-testid="stToolbar"] {
