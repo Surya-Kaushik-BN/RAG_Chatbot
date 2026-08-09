@@ -639,7 +639,7 @@ def main() -> None:
         st.subheader(f"Chat ({selected_domain})")
         
         # Create a container for scrollable chat history
-        chat_container = st.container(height=350, border=False)
+        chat_container = st.container(height=200, border=False)
         with chat_container:
             render_chat_history()
 
