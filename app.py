@@ -626,7 +626,6 @@ def main() -> None:
             placeholder="e.g. Valuation, STP, Working Capital",
             key="flashcard_topic",
         )
-        st.session_state.flashcard_topic = topic
 
         difficulty = st.selectbox(
             "Difficulty",
@@ -634,7 +633,6 @@ def main() -> None:
             index=["Easy", "Medium", "Hard"].index(st.session_state.flashcard_difficulty),
             key="flashcard_difficulty",
         )
-        st.session_state.flashcard_difficulty = difficulty
 
         question_count = st.slider(
             "Number of cards",
@@ -703,14 +701,12 @@ def main() -> None:
             value=st.session_state.rapid_fire_topic,
             placeholder="e.g. Valuation, STP, Working Capital",
         )
-        st.session_state.rapid_fire_topic = topic
 
         difficulty = st.selectbox(
             "Difficulty",
             ["Easy", "Medium", "Hard"],
             index=["Easy", "Medium", "Hard"].index(st.session_state.rapid_fire_difficulty),
         )
-        st.session_state.rapid_fire_difficulty = difficulty
 
         question_count = st.slider(
             "Number of questions",
