@@ -162,6 +162,20 @@ def inject_custom_styles() -> None:
             box-shadow: inset 0 1px 2px rgba(15, 40, 81, .05) !important;
         }
 
+        h1, h2, h3, h4, h5, h6 {
+            color: #102949 !important;
+            font-weight: 700 !important;
+        }
+
+        section[data-testid="stSidebar"] h1,
+        section[data-testid="stSidebar"] h2,
+        section[data-testid="stSidebar"] h3,
+        section[data-testid="stSidebar"] h4,
+        section[data-testid="stSidebar"] h5,
+        section[data-testid="stSidebar"] h6 {
+            color: #f8f9ff !important;
+        }
+
         .stMarkdown h1, .stMarkdown h2, .stMarkdown h3, .stMarkdown h4 {
             color: #102949 !important;
             font-weight: 700 !important;
