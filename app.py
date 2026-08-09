@@ -278,6 +278,15 @@ def inject_custom_styles() -> None:
             box-sizing: border-box !important;
         }
 
+        /* Remove the dark box from the fixed chat input specifically */
+        # div[data-testid="stChatInput"] > div > textarea {
+        #     background: transparent !important;
+        #     border: none !important;
+        #     box-shadow: none !important;
+        #     color: #1a202c !important; /* Set text color to match the page */
+        # }
+
+
         .css-1v0mbdj h2, .css-1v0mbdj h3,
         .css-1950qzw h2, .css-1950qzw h3 {
             margin-top: 0 !important;
