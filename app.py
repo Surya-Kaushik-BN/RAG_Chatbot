@@ -260,8 +260,9 @@ def inject_custom_styles() -> None:
         textarea[placeholder^="Ask a"] {
             position: fixed !important;
             bottom: 24px !important;
-            left: 320px !important; /* leave space for sidebar */
-            right: 32px !important;
+            left: 50% !important;
+            transform: translateX(-50%) !important;
+            width: min(1000px, calc(100% - 420px)) !important; /* centered, leaves room for sidebar */
             z-index: 99999 !important;
             border-radius: 20px !important;
         }
